@@ -6,6 +6,7 @@
 #define ENABLE_BAD_CRT 1
 #define ENABLE_SCREENLINES 1
 #define ENABLE_HUEOFFSET 0
+#define ENABLE_TINT 0
 
 // You can tweak the look by making small adjustments to these values
 #define HUE_OFFSET 0.0f
@@ -13,6 +14,8 @@
 #define TOLERANCE 0.266f
 
 #define REFRESH_LINE_SIZE 0.04f
+
+#define TINT_COLOR float4(0, 0.7f, 0, 0)
 
 #define DOWNSCALE   (1.5*Scale)
 
@@ -126,6 +129,12 @@ float3 screen(float2 reso, float2 p, float diff, float spe) {
   float3 col = float3(0.0, 0.0, 0.0);
   col += hsv2rgb(shsv);
   col += (0.35*spe+0.25*diff)*vig;
+
+#if ENABLE_TINT
+  float grayscale = (col.r + col.g + col.b) / 3.f;
+  col = float4(grayscale, grayscale, grayscale, 0);
+  col *= TINT_COLOR;
+#endif
 
   return col;
 }
