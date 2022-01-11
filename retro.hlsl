@@ -13,9 +13,12 @@
 #define CHANGE_RATE 0.01f
 #define TOLERANCE 0.266f
 
-#define REFRESH_LINE_SIZE 0.04f
+#define REFRESHLINE_SIZE 0.04f
+#define REFRESHLINE_STRENGTH 0.5f
 
 #define TINT_COLOR float4(0, 0.7f, 0, 0)
+
+#define BAD_CRT_EFFECT 0.05f
 
 #define DOWNSCALE   (1.5*Scale)
 
@@ -93,7 +96,7 @@ float3 screen(float2 reso, float2 p, float diff, float spe) {
   float2 ap = p;
   ap.x *= sr;
 
-  // Viginetting
+  // Vignetting
   float2 vp = ap + 0.5;
   float vig = tanh(pow(max(100.0*vp.x*vp.y*(1.0-vp.x)*(1.0-vp.y), 0.0), 0.35));
 
@@ -118,7 +121,7 @@ float3 screen(float2 reso, float2 p, float diff, float spe) {
 
 #if ENABLE_BAD_CRT
   // Simulate bad CRT screen
-  float dist = (p.x+p.y)*0.05;
+  float dist = (p.x+p.y)*BAD_CRT_EFFECT;
   shsv.x += dist;
 #endif
 
@@ -183,7 +186,7 @@ float4 MAIN(float4 pos : SV_POSITION, float2 tex : TEXCOORD) : SV_TARGET {
  	#if ENABLE_REFRESHLINE
 	float timeOver = fmod(Time / 5, 1);
 	float refreshLineColorTint = timeOver - q.y;
-	if(q.y > timeOver && q.y - REFRESH_LINE_SIZE < timeOver ) col.rgb += (refreshLineColorTint * 2.0f);
+	if(q.y > timeOver && q.y - REFRESHLINE_SIZE < timeOver ) col.rgb += (refreshLineColorTint * REFRESHLINE_STRENGTH);
 	#endif
 
   return float4(col, 1.0);
