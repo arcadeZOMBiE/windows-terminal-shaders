@@ -1,4 +1,5 @@
 // Retro shader.  Makes your console look like an old CRT
+// Based on the RETROII example code provided on Windows Terminal forums
 
 // Set these to 1 to enable and 0 to disable each feature
 #define ENABLE_REFRESHLINE 1
@@ -7,6 +8,16 @@
 #define ENABLE_SCREENLINES 1
 #define ENABLE_HUEOFFSET 0
 #define ENABLE_TINT 0
+#define ENABLE_GRAIN 1
+
+#define GRAIN_INTENSITY 0.03
+
+// Grain Lookup Table
+#define a0  0.151015505647689
+#define a1 -0.5303572634357367
+#define a2  1.365020122861334
+#define b0  0.132089632343748
+#define b1 -0.7607324991323768
 
 // You can tweak the look by making small adjustments to these values
 #define HUE_OFFSET 0.0f
@@ -26,6 +37,8 @@
 #define PI          3.141592654
 #define TAU         (2.0*PI)
 
+#define SCALED_GAUSSIAN_SIGMA (2.0*Scale)
+
 static const float4 scanlineTint = float4(0.6f, 0.6f, 0.6f, 0.0f);
 
 Texture2D shaderTexture;
@@ -40,6 +53,18 @@ cbuffer PixelShaderSettings {
 
 float2 resolution() {
   return Resolution;
+}
+
+float permute(float x)
+{
+	x *= (34 * x + 1);
+	return 289 * frac(x * 1 / 289.0f);
+}
+
+float rand(inout float state)
+{
+	state = permute(state);
+	return frac(state / 41.0f);
 }
 
 // HSV to RGB conversion
@@ -65,7 +90,6 @@ float3 adjust_hue(float3 HSV, float offset)
 	if (HSV.y >= TOLERANCE) { HSV.x = fmod(HSV.x + offset, 1); }
 	return HSV;
 }
-
 
 // Ray sphere intersection
 float raySphere(float3 ro, float3 rd, float4 sph) {
@@ -188,6 +212,18 @@ float4 MAIN(float4 pos : SV_POSITION, float2 tex : TEXCOORD) : SV_TARGET {
 	float refreshLineColorTint = timeOver - q.y;
 	if(q.y > timeOver && q.y - REFRESHLINE_SIZE < timeOver ) col.rgb += (refreshLineColorTint * REFRESHLINE_STRENGTH);
 	#endif
+
+#if ENABLE_GRAIN
+	float3 m = float3(tex, Time % 5 / 5) + 1.;
+	float state = permute(permute(m.x) + m.y) + m.z;
+
+	float pp = 0.95 * rand(state) + 0.025;
+	float qq = pp - 0.5;
+	float r2 = qq * qq;
+
+	float grain = qq * (a2 + (a1 * r2 + a0) / (r2 * r2 + b1 * r2 + b0));
+	col.rgb += GRAIN_INTENSITY * grain;
+#endif
 
   return float4(col, 1.0);
 }
