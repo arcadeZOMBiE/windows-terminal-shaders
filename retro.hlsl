@@ -29,7 +29,7 @@
 
 #define TINT_COLOR float4(0, 0.7f, 0, 0)
 
-#define BAD_CRT_EFFECT 0.05f
+#define BAD_CRT_EFFECT 0.06f
 
 #define DOWNSCALE   (1.5*Scale)
 
@@ -159,7 +159,7 @@ float3 screen(float2 reso, float2 p, float diff, float spe) {
 
 #if ENABLE_TINT
   float grayscale = (col.r + col.g + col.b) / 3.f;
-  col = float4(grayscale, grayscale, grayscale, 0);
+  col = float4(grayscale, grayscale, grayscale, 0.1f);
   col *= TINT_COLOR;
 #endif
 
